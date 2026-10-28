@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4e5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cleaning Manager">
+<title>Cleaning Manager</title>
+<style>
+/* PC-app look on a phone: dark teal top bar with tab navigation, light grey ground, white cards, Arial. Light theme only. */
+:root{color-scheme:light;
+  --ink:#1d2b33;--mut:#66757e;--line:#dbe3e7;--bg:#f4f7f8;--surface:#ffffff;--surface2:#f4f7f8;
+  --brand:#1f4e5f;--brand2:#2e7d94;--on-brand:#ffffff;--accent:#7fd1e6;
+  --ok:#1e8e4e;--ok-bg:#e3f4ea;--warn:#a96a00;--warn-bg:#fff1d6;--bad:#b3261e;--bad-bg:#fde4e2;--info:#1c5fa8;--info-bg:#e1edf9;--idle:#555555;--idle-bg:#eceff1;
+  --scrim:rgba(10,22,28,.5);--font:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font);padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--brand);color:#fff;position:sticky;top:0;z-index:20;padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+header .in{display:flex;align-items:center;gap:22px;max-width:960px;margin:0 auto}
+header h1{font-size:17px;margin:0;padding:14px 0;white-space:nowrap}
+nav{display:flex;gap:2px;overflow-x:auto;min-width:0;-webkit-overflow-scrolling:touch}
+nav button{background:none;border:0;color:#cfe3ea;font-weight:700;font-size:14px;padding:16px 14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button:hover{color:#fff}nav button.on{color:#fff;border-bottom-color:var(--accent)}
+main{max-width:960px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+main>*{min-width:0}
+h2{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin:4px 2px 0;font-weight:700}
+h2.pt{font-size:20px;letter-spacing:0;text-transform:none;color:var(--ink);margin:0 0 2px}
+.subt{color:var(--mut);margin:0}
+h3.ct{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi .n{font-size:28px;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{color:var(--mut);font-size:12px;margin-top:2px}
+.hero{display:flex;flex-direction:column;gap:8px}
+.hero .big{font-size:28px;font-weight:700;color:var(--brand);line-height:1.1;font-variant-numeric:tabular-nums}
+.hero .big small{font-size:16px;color:var(--mut);font-weight:500}
+.bar{height:8px;background:var(--idle-bg);border-radius:6px;overflow:hidden;margin-top:8px}.bar>i{display:block;height:100%;background:var(--ok)}
+.mut{color:var(--mut)}.sm{font-size:13px}.num{font-variant-numeric:tabular-nums}
+.row{display:flex;gap:10px;align-items:center;min-width:0}.row>.grow{flex:1;min-width:0}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:12px;align-items:center;min-width:0;width:100%;text-align:left;cursor:pointer}
+.item:hover{background:#fafcfd}
+.item .t{font-weight:700;overflow-wrap:anywhere}.item .s{color:var(--mut);font-size:13px;overflow-wrap:anywhere}
+.rno{min-width:50px;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--brand)}
+.amt{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:auto;padding-left:10px}
+.chip{border:0;border-radius:12px;padding:6px 12px;font-weight:700;font-size:12px;white-space:nowrap;min-height:32px;cursor:pointer}
+.chip.static{cursor:default;padding:3px 10px;min-height:0}
+.chip.Pending,.chip.idle{background:var(--idle-bg);color:var(--idle)}
+.chip.InProgress,.chip.LOW{background:var(--warn-bg);color:var(--warn)}
+.chip.Done,.chip.OK,.chip.Bonus{background:var(--ok-bg);color:var(--ok)}
+.chip.Inspected,.chip.In{background:var(--info-bg);color:var(--info)}
+.chip.OUT,.chip.Deduction,.chip.Out{background:var(--bad-bg);color:var(--bad)}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.filters .f,.ptabs button{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:18px;padding:6px 14px;font-weight:700;font-size:13px;color:var(--mut);white-space:nowrap;cursor:pointer;min-height:34px}
+.filters .f.on,.ptabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.ptabs{display:flex;gap:6px;overflow-x:auto}
+.datebar{display:flex;align-items:center;gap:8px}
+.datebar .d{flex:1;text-align:center;font-weight:700;font-size:15px}
+.btn{background:var(--brand);color:#fff;border:0;border-radius:6px;padding:0 16px;min-height:44px;font-weight:700;cursor:pointer;width:100%}
+.btn:hover{background:var(--brand2)}
+.btn.sec{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+.btn.bad{background:#fff;color:var(--bad);border:1px solid #e8b4b0}
+.btn.bad:hover{background:var(--bad-bg)}
+.btn.sq{width:44px;padding:0;flex:0 0 44px}
+.btn:disabled{opacity:.5}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:15;background:var(--brand);color:#fff;border:0;border-radius:24px;min-height:48px;padding:0 20px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:90%;overflow-y:auto;border-radius:14px 14px 0 0;
+  padding:18px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-size:18px}
+.field{display:flex;flex-direction:column;gap:4px}.field>label,.lbl{font-size:12px;color:var(--mut);font-weight:700}
+input,select,textarea{width:100%;background:#fff;border:1px solid #c3cfd5;border-radius:6px;padding:8px 10px;font-size:16px;min-height:44px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:var(--brand2)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;border:1px solid #c3cfd5;border-radius:6px;overflow:hidden}
+.seg button{flex:1;border:0;background:#fff;padding:11px 4px;font-weight:700;font-size:13px;color:var(--mut);border-right:1px solid var(--line);min-height:44px}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--brand);color:#fff}
+.stat{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.stat:last-child{border:0}
+table{width:100%;border-collapse:collapse}
+th{background:var(--brand);color:#fff;text-align:left;font-size:12px;padding:8px 10px;white-space:nowrap}th.r,td.r{text-align:right}
+td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.scroll{overflow-x:auto}
+.empty{text-align:center;color:var(--mut);padding:22px 10px}
+.banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:11px 14px;font-weight:700;display:flex;gap:10px;align-items:center}
+.banner button{margin-left:auto;background:var(--warn);color:var(--warn-bg);border:0;border-radius:6px;padding:7px 12px;font-weight:700;white-space:nowrap;min-height:34px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;z-index:60;font-weight:700;max-width:88%;text-align:center}
+.slip{background:var(--surface2);border:1px dashed var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.welcome{margin-top:10vh;display:flex;flex-direction:column;gap:12px;max-width:420px;margin-inline:auto;padding:0 16px}
+.welcome h1{font-size:28px;margin:0;line-height:1.1;color:var(--brand)}
+.filebtn{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;border:1px solid var(--brand);color:var(--brand);font-weight:700;cursor:pointer;position:relative;overflow:hidden;background:#fff}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;min-height:0}
+
+.inv{font-size:13px;color:#111}.inv-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:2px solid var(--brand);padding-bottom:10px}
+.inv-biz{font-size:17px;font-weight:700;color:var(--brand)}.inv-title{font-size:22px;font-weight:700;letter-spacing:2px;color:var(--brand)}
+.inv-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px}.inv-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut)}.inv-sm{font-size:12px;color:#444}
+.inv-t{width:100%;border-collapse:collapse}.inv-t th{background:#eef3f5;color:#333;text-align:left;padding:6px 8px;font-size:12px}.inv-t td{padding:6px 8px;border-bottom:1px solid #e3e9ec}.inv-t .r{text-align:right}.inv-t.sm td,.inv-t.sm th{padding:3px 8px;font-size:12px}.inv-t .tot td{font-weight:700;border-top:2px solid #222;border-bottom:0}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px}.chk input{width:auto;min-height:0}.invwrap{overflow-x:auto}
+
+.step{display:flex;align-items:center;gap:6px}.step button{width:44px;height:44px;border-radius:8px;border:1px solid var(--brand);background:#fff;font-size:22px;color:var(--brand);cursor:pointer}
+.step input{width:64px;text-align:center;font-weight:700;padding:6px 4px}.wk-st{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.wk-st button{flex:1;min-height:44px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:700;cursor:pointer;color:var(--mut)}
+.wk-st button.on{background:var(--brand);border-color:var(--brand);color:#fff}.wk-st button.on.d{background:var(--ok);border-color:var(--ok)}
+.sendbar{margin-top:8px}.pre{white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--surface2);border:1px dashed var(--line);border-radius:8px;padding:10px;max-height:160px;overflow:auto}
+#printarea{display:none}
+@media print{body>*:not(#printarea){display:none!important}#printarea{display:block!important;padding:0}body{background:#fff}@page{margin:14mm}}
+@media(max-width:700px){
+  header .in{flex-direction:column;align-items:stretch;gap:0}header h1{padding:10px 0 0;font-size:16px}nav button{padding:12px 7px;font-size:13px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi .n{font-size:24px}.card{padding:14px}main{padding-top:16px}
+}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ============================================================ helpers */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const todayS = () => ymd(new Date());
+const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return ymd(d); };
+const fmtDate = s => s ? new Date(s + 'T12:00:00').toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'}) : '';
+const fmtShort = s => s ? new Date(s + 'T12:00:00').toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'}) : '';
+let CUR = '';
+const money = n => CUR + (Number(n) || 0).toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const STATUSES = ['Pending', 'In Progress', 'Done', 'Inspected'];
+const PAID = ['Done', 'Inspected'];
+const cls = s => String(s).replace(/ /g, '');
+const KEY = 'cleaningManager.v1';
+
+function weekPeriod(back) {
+  const now = new Date(), day = (now.getDay() + 6) % 7, f = new Date(now);
+  f.setDate(now.getDate() - day - 7 * back); const t = new Date(f); t.setDate(f.getDate() + 6);
+  return {from: ymd(f), to: ymd(t)};
+}
+function monthPeriod() { const n = new Date(); return {from: ymd(new Date(n.getFullYear(), n.getMonth(), 1)), to: ymd(new Date(n.getFullYear(), n.getMonth() + 1, 0))}; }
+
+/* ============================================================ data */
+let S = null, storageOK = true, tab = 'home', sub = '';
+const V = {date: todayS(), status: '', worker: '', hotel: ''};
+
+function blank() {
+  return {v: 1, currency: '', hotels: [], workers: [], rates: [], tasks: [], adjustments: [], inventory: [], stocklog: [],
+    period: weekPeriod(0), lists: {roomTypes: ['Standard', 'Deluxe', 'Suite', 'Family'], categories: ['Cleaning', 'Bedding', 'Toiletries', 'Equipment']},
+    meta: {lastBackup: null, changes: 0}};
+}
+function loadData() {
+  try { const t = localStorage.getItem(KEY); if (t) { S = JSON.parse(t); return true; } } catch (e) { storageOK = false; }
+  return false;
+}
+function serialize() {
+  const o = Object.assign({}, S); delete o.RM;
+  o.tasks = S.tasks.map(t => ({date: t.date, hotel: t.hotel, room: t.room, type: t.type, worker: t.worker, status: t.status, notes: t.notes}));
+  o.adjustments = S.adjustments.map(a => ({date: a.date, worker: a.worker, type: a.type, amount: a.amount, reason: a.reason}));
+  o.inventory = S.inventory.map(i => ({name: i.name, category: i.category, unit: i.unit, opening: i.opening, reorder: i.reorder, target: i.target}));
+  return JSON.stringify(o);
+}
+function persist() {
+  S.meta.changes = (S.meta.changes || 0) + 1; S.meta.sinceBackup = (S.meta.sinceBackup || 0) + 1;
+  try { localStorage.setItem(KEY, serialize()); storageOK = true; } catch (e) { storageOK = false; }
+  derive(); render();
+}
+function derive() {
+  CUR = S.currency ? S.currency : '';
+  const RM = {}; S.rates.forEach(r => RM[r.hotel + '|' + r.type] = r.rate); S.RM = RM;
+  S.tasks.forEach(t => { const r = RM[t.hotel + '|' + t.type]; t.rate = r === undefined ? null : r; t.pay = PAID.includes(t.status) && t.rate !== null ? t.rate : 0; });
+  S.adjustments.forEach(a => a.signed = a.type === 'Deduction' ? -a.amount : a.amount);
+  S.inventory.forEach(it => {
+    let i = 0, o = 0;
+    S.stocklog.forEach(m => { if (m.item === it.name) { if (m.move === 'In') i += m.qty; else o += m.qty; } });
+    it.inQ = i; it.outQ = o; it.cur = it.opening + i - o;
+    it.status = it.cur <= 0 ? 'OUT' : it.cur <= it.reorder ? 'LOW' : 'OK';
+    it.toOrder = it.status === 'OK' ? 0 : Math.max(0, it.target - it.cur);
+  });
+}
+const inPeriod = d => d >= S.period.from && d <= S.period.to;
+const activeWorkers = () => S.workers.filter(w => (w.active || 'Yes').toLowerCase() !== 'no');
+function daysSinceBackup() { return S.meta.lastBackup ? Math.floor((Date.now() - new Date(S.meta.lastBackup).getTime()) / 864e5) : null; }
+function backupDue() {
+  const c = S.meta.changes || 0, hasData = S.tasks.length + S.workers.length > 0, d = daysSinceBackup();
+  if (!hasData) return false;
+  if (d === null) return c >= 15;
+  return (S.meta.sinceBackup || 0) >= 1 && d >= 7;
+}
+
+/* ============================================================ shell */
+const ICON = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+  rooms: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  pay: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  stock: '<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
+  more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>'
+};
+const TABS = [['home', 'Dashboard'], ['rooms', 'Tasks'], ['pay', 'Pay'], ['stock', 'Inventory'], ['invoice', 'Invoice'], ['more', 'Setup']];
+const HEADS = {
+  home: ['Dashboard', () => fmtDate(todayS())],
+  rooms: ['Tasks', () => 'Assign rooms to workers and update progress. A room earns pay once it is Done or Inspected.'],
+  pay: ['Pay', () => 'Net pay = rooms Done or Inspected × the rate for that hotel and room type, plus bonuses, minus deductions.'],
+  stock: ['Inventory', () => 'Current stock = opening stock + received − used. Status turns LOW at or below the reorder level.'],
+  invoice: ['Invoice', () => 'Bill a hotel for the rooms cleaned in a date range, then print it or save it as a PDF.'],
+  more: ['Workers & Setup', () => 'Changes are saved on this phone.']
+};
+function render() {
+  const y = window.scrollY;
+  if (!S) return;
+  if (!S.meta.welcomed && S.tasks.length + S.workers.length + S.hotels.length === 0) { $('#app').innerHTML = vWelcome(); return; }
+  const body = {home: vHome, rooms: vRooms, pay: vPay, stock: vStock, invoice: vInvoice, more: vMore}[tab]();
+  const [ht, hs] = HEADS[tab];
+  const fab = tab === 'rooms' ? `<button class="fab" onclick="sAssign()">+ Assign rooms</button>` : '';
+  const d = daysSinceBackup();
+  const bk = backupDue() && !(tab === 'more' && sub === 'backup') ? `<div class="banner">${d === null ? 'You have not backed up yet.' : `Last backup ${d} days ago.`}<button onclick="tab='more';sub='backup';render()">Export</button></div>` : '';
+  $('#app').innerHTML = `<header><div class="in"><h1>Cleaning Manager</h1><nav>${TABS.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" onclick="go('${k}')">${l}</button>`).join('')}</nav></div></header>
+    <main><div><h2 class="pt">${ht}</h2><p class="subt">${hs()}</p></div>${!storageOK ? `<div class="banner">This browser cannot save data. Use Export to Excel often, or open the page in a normal (non-private) window.</div>` : ''}${bk}${body}</main>${fab}`;
+  window.scrollTo(0, y);
+}
+function go(t) { tab = t; sub = ''; render(); window.scrollTo(0, 0); }
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+const opts = (list, sel, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') + list.map(v => `<option ${v === sel ? 'selected' : ''}>${esc(v)}</option>`).join('');
+const chip = (s, extra) => `<span class="chip static ${cls(s)}">${esc(s)}</span>`;
+
+/* sheets */
+function openSheet(html) {
+  $('#sheet').innerHTML = `<div class="scrim" onclick="if(event.target===this)closeSheet()"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+}
+function closeSheet() { $('#sheet').innerHTML = ''; }
+function sConfirm(msg, label, fnName) {
+  openSheet(`<h3>${esc(msg)}</h3><div class="two"><button class="btn sec" onclick="closeSheet()">Cancel</button><button class="btn bad" onclick="closeSheet();${fnName}">${esc(label)}</button></div>`);
+}
+const val = id => ($('#' + id) || {}).value || '';
+
+/* ============================================================ welcome */
+function vWelcome() {
+  return `<div class="welcome"><h1>Cleaning Manager</h1>
+  <p class="mut">Track rooms, pay your cleaners and watch your stock. Everything is saved on this phone only.</p>
+  <button class="btn" onclick="startFresh()">Start with my own data</button>
+  <button class="btn sec" onclick="loadSample()">Try it with sample data</button>
+  <label class="filebtn">Import my Excel workbook<input type="file" accept=".xlsx" onchange="pickImport(this)"></label>
+  <p class="mut sm">Tip: use the same browser or app every time you open this page, because the data is stored inside it. Export to Excel regularly as your backup.</p></div>`;
+}
+function startFresh() { S.meta.welcomed = true; persist(); }
+
+/* ============================================================ home */
+function vHome() {
+  const T = todayS(), td = S.tasks.filter(t => t.date === T), done = td.filter(t => PAID.includes(t.status)).length;
+  const low = S.inventory.filter(i => i.status !== 'OK').sort((a, b) => (a.status === 'OUT' ? 0 : 1) - (b.status === 'OUT' ? 0 : 1));
+  const per = S.tasks.filter(t => inPeriod(t.date));
+  const net = per.reduce((a, t) => a + t.pay, 0) + S.adjustments.filter(a => inPeriod(a.date)).reduce((a, x) => a + x.signed, 0);
+  const byHotel = S.hotels.map(h => { const a = per.filter(t => t.hotel === h.name); return {name: h.name, n: a.length, d: a.filter(t => PAID.includes(t.status)).length, pay: a.reduce((x, t) => x + t.pay, 0)}; });
+  return `<div class="kpis">
+    <div class="card kpi"><div class="n">${td.length}</div><div class="l">Rooms scheduled today</div></div>
+    <div class="card kpi"><div class="n">${done} <span style="font-size:15px;color:var(--mut)">/ ${td.length}</span></div><div class="l">Completed today (${pct(done, td.length)}%)</div><div class="bar"><i style="width:${pct(done, td.length)}%"></i></div></div>
+    <div class="card kpi"><div class="n">${money(net)}</div><div class="l">Net payroll, ${fmtShort(S.period.from)} – ${fmtShort(S.period.to)}</div></div>
+    <div class="card kpi"><div class="n" style="color:var(--${low.length ? 'bad' : 'ok'})">${low.length}</div><div class="l">Items low or out of stock</div></div></div>
+  <div class="card"><h3 class="ct">Today's rooms</h3>
+  ${td.length ? `<div class="list">${td.map(t => roomCard(S.tasks.indexOf(t))).join('')}</div>` : `<div class="empty">No rooms scheduled today.<br><br><button class="btn" onclick="go('rooms');sAssign()">Assign rooms</button></div>`}</div>
+  <div class="card"><h3 class="ct">Restock needed</h3>
+  ${low.length ? `<div class="list">${low.map(i => `<button class="item" onclick="go('stock');sItem(${S.inventory.indexOf(i)})"><div class="grow"><div class="t">${esc(i.name)}</div><div class="s num">${i.cur} ${esc(i.unit)} left · reorder at ${i.reorder} · order ${i.toOrder}</div></div>${chip(i.status)}</button>`).join('')}</div>` : `<div class="empty">All stock levels are fine.</div>`}</div>
+  <div class="card"><h3 class="ct">By hotel (pay period)</h3>
+  ${byHotel.length ? `<div class="scroll"><table><tr><th>Hotel</th><th class="r">Rooms</th><th class="r">Done</th><th class="r">Pay cost</th></tr>${byHotel.map(h => `<tr><td>${esc(h.name)}</td><td class="r">${h.n}</td><td class="r">${h.d} (${pct(h.d, h.n)}%)</td><td class="r">${money(h.pay)}</td></tr>`).join('')}</table></div>` : `<div class="empty">No hotels yet. Add them under Setup.</div>`}</div>`;
+}
+
+/* ============================================================ rooms */
+function roomCard(i) {
+  const t = S.tasks[i];
+  return `<div class="item" role="button" tabindex="0" onclick="sTask(${i})"><div class="rno">${esc(t.room)}</div>
+    <div class="grow"><div class="t">${esc(t.hotel)}</div><div class="s">${esc(t.type)} · ${esc(t.worker)}</div></div>
+    <button class="chip ${cls(t.status)}" onclick="event.stopPropagation();advance(${i})">${esc(t.status)}</button></div>`;
+}
+function vRooms() {
+  let rows = S.tasks.map((t, i) => ({t, i})).filter(r => r.t.date === V.date);
+  const all = rows;
+  if (V.worker) rows = rows.filter(r => r.t.worker === V.worker);
+  if (V.hotel) rows = rows.filter(r => r.t.hotel === V.hotel);
+  if (V.status) rows = rows.filter(r => r.t.status === V.status);
+  const c = s => all.filter(r => r.t.status === s).length;
+  return `<div class="datebar"><button class="btn sec sq" onclick="V.date=addDays(V.date,-1);render()" aria-label="Previous day">‹</button>
+    <div class="d">${V.date === todayS() ? 'Today · ' : ''}${fmtShort(V.date)}</div><button class="btn sec sq" onclick="V.date=addDays(V.date,1);render()" aria-label="Next day">›</button></div>
+  <div class="filters"><button class="f ${V.status === '' ? 'on' : ''}" onclick="V.status='';render()">All ${all.length}</button>
+    ${STATUSES.map(s => `<button class="f ${V.status === s ? 'on' : ''}" onclick="V.status='${s}';render()">${s} ${c(s)}</button>`).join('')}</div>
+  <div class="two"><select id="fw" onchange="V.worker=this.value;render()" aria-label="Worker">${opts(S.workers.map(w => w.name), V.worker, 'All workers')}</select>
+    <select id="fh" onchange="V.hotel=this.value;render()" aria-label="Hotel">${opts(S.hotels.map(h => h.name), V.hotel, 'All hotels')}</select></div>
+  <button class="btn sec" onclick="sSend()">Send work to a worker</button>
+  ${rows.length ? `<div class="list">${rows.map(r => roomCard(r.i)).join('')}</div><p class="mut sm" style="text-align:center;margin:0">Tap a status to move it forward. Tap a room to edit it.</p>` :
+    `<div class="card empty">No rooms ${all.length ? 'match these filters' : 'on this day'}.</div>`}<div style="height:56px"></div>`;
+}
+function advance(i) {
+  const t = S.tasks[i], k = STATUSES.indexOf(t.status);
+  if (k >= STATUSES.length - 1) return toast('Already inspected. Open the room to change it.');
+  t.status = STATUSES[k + 1]; persist();
+}
+function sAssign() {
+  const types = S.lists.roomTypes, ws = activeWorkers().map(w => w.name), hs = S.hotels.map(h => h.name);
+  if (!hs.length || !ws.length) return openSheet(`<h3>Set up first</h3><p class="mut">Add at least one hotel and one worker (Setup tab) before assigning rooms.</p><button class="btn" onclick="closeSheet();go('more')">Go to Setup</button>`);
+  openSheet(`<h3>Assign rooms</h3>
+  <div class="field"><label for="a_date">Date</label><input id="a_date" type="date" value="${V.date}"></div>
+  <div class="two"><div class="field"><label for="a_hotel">Hotel</label><select id="a_hotel">${opts(hs, hs[0])}</select></div>
+  <div class="field"><label for="a_type">Room type</label><select id="a_type">${opts(types, types[0])}</select></div></div>
+  <div class="field"><label for="a_rooms">Room numbers</label><input id="a_rooms" placeholder="e.g. 101, 102, 105-108" autocomplete="off"></div>
+  <div class="field"><label for="a_worker">Worker</label><select id="a_worker">${opts(ws, ws[0])}</select></div>
+  <button class="btn" onclick="doAssign()">Add rooms</button>`);
+}
+function parseRooms(txt) {
+  const out = [];
+  txt.split(/[,;\s]+/).filter(Boolean).forEach(p => {
+    const m = p.match(/^(\d+)-(\d+)$/);
+    if (m && +m[2] >= +m[1] && +m[2] - +m[1] < 200) for (let i = +m[1]; i <= +m[2]; i++) out.push(String(i)); else out.push(p);
+  });
+  return out;
+}
+function doAssign() {
+  const rooms = parseRooms(val('a_rooms'));
+  if (!rooms.length) return toast('Enter at least one room number');
+  const date = val('a_date') || todayS(), hotel = val('a_hotel'), type = val('a_type'), worker = val('a_worker');
+  rooms.forEach(r => S.tasks.push({date, hotel, room: r, type, worker, status: 'Pending', notes: ''}));
+  V.date = date; closeSheet(); persist();
+  toast(`${rooms.length} room${rooms.length > 1 ? 's' : ''} added` + (S.RM[hotel + '|' + type] === undefined ? ' – no pay rate set for this hotel and type' : ''));
+}
+function sTask(i) {
+  const t = S.tasks[i], ws = S.workers.map(w => w.name);
+  openSheet(`<h3>${esc(t.hotel)} · Room ${esc(t.room)}</h3><div class="mut sm">${esc(t.type)} · ${fmtDate(t.date)} · pay ${t.rate === null ? 'no rate set' : money(t.rate)}</div>
+  <div class="field"><span class="lbl">Status</span><div class="seg">${STATUSES.map(s => `<button class="${t.status === s ? 'on' : ''}" onclick="setTask(${i},'status','${s}')">${s}</button>`).join('')}</div></div>
+  <div class="field"><label for="e_worker">Worker</label><select id="e_worker" onchange="setTask(${i},'worker',this.value,true)">${opts(ws, t.worker)}</select></div>
+  <div class="field"><label for="e_notes">Notes</label><input id="e_notes" value="${esc(t.notes)}" onchange="setTask(${i},'notes',this.value,true)"></div>
+  <div class="two"><button class="btn bad" onclick="sConfirm('Remove this room?','Remove','delTask(${i})')">Remove</button><button class="btn" onclick="closeSheet()">Done</button></div>`);
+}
+function setTask(i, k, v, keepOpen) { S.tasks[i][k] = v; persist(); if (!keepOpen) sTask(i); }
+function delTask(i) { S.tasks.splice(i, 1); persist(); toast('Room removed'); }
+
+/* ============================================================ pay */
+function payRows() {
+  return S.workers.map((w, wi) => {
+    const a = S.tasks.filter(t => t.worker === w.name && inPeriod(t.date)), d = a.filter(t => PAID.includes(t.status));
+    const roomPay = a.reduce((x, t) => x + t.pay, 0), adj = S.adjustments.filter(x => x.worker === w.name && inPeriod(x.date));
+    const bonus = adj.filter(x => x.type === 'Bonus').reduce((x, y) => x + y.amount, 0), ded = adj.filter(x => x.type === 'Deduction').reduce((x, y) => x + y.amount, 0);
+    return {wi, name: w.name, active: (w.active || 'Yes').toLowerCase() !== 'no', assigned: a.length, done: d.length, roomPay, bonus, ded, net: roomPay + bonus - ded};
+  });
+}
+function vPay() {
+  const rows = payRows().filter(r => r.active || r.assigned || r.bonus || r.ded);
+  const total = rows.reduce((a, r) => a + r.net, 0), adjs = S.adjustments.map((a, i) => ({a, i})).filter(x => inPeriod(x.a.date)).sort((x, y) => y.a.date.localeCompare(x.a.date));
+  return `<div class="card"><div class="two"><div class="field"><label for="p_from">From</label><input id="p_from" type="date" value="${S.period.from}" onchange="setPeriod('from',this.value)"></div>
+    <div class="field"><label for="p_to">To</label><input id="p_to" type="date" value="${S.period.to}" onchange="setPeriod('to',this.value)"></div></div>
+    <div class="filters" style="margin-top:10px"><button class="f" onclick="quickPeriod(0)">This week</button><button class="f" onclick="quickPeriod(1)">Last week</button><button class="f" onclick="quickPeriod(2)">This month</button></div></div>
+  <div class="card hero"><div class="mut sm">Net payroll for the period</div><div class="big num">${money(total)}</div></div>
+  <button class="btn" onclick="sAdj()">+ Add bonus or deduction</button>
+  <h2>Workers</h2>
+  ${rows.length ? `<div class="list">${rows.map(r => `<button class="item" onclick="sSlip(${r.wi})"><div class="grow"><div class="t">${esc(r.name)}</div>
+    <div class="s num">${r.done} of ${r.assigned} rooms done${r.bonus ? ` · +${money(r.bonus)}` : ''}${r.ded ? ` · −${money(r.ded)}` : ''}</div></div><div class="amt">${money(r.net)}</div></button>`).join('')}</div>` : `<div class="card empty">No workers yet. Add them under Setup.</div>`}
+  <div class="row"><h2 class="grow">Bonuses & deductions</h2><button class="chip Done" onclick="sAdj()">+ Add</button></div>
+  ${adjs.length ? `<div class="list">${adjs.map(({a, i}) => `<button class="item" onclick="sConfirm('Delete this ${a.type.toLowerCase()} of ${money(a.amount)}?','Delete','delAdj(${i})')"><div class="grow"><div class="t">${esc(a.worker)}</div><div class="s">${fmtShort(a.date)}${a.reason ? ' · ' + esc(a.reason) : ''}</div></div>
+    <span class="chip static ${a.type}">${a.type === 'Bonus' ? '+' : '−'}${money(a.amount)}</span></button>`).join('')}</div>` : `<div class="card mut">None in this period.</div>`}
+  <button class="btn sec" onclick="csvPay()">Copy pay summary as text</button>`;
+}
+function setPeriod(k, v) { if (!v) return; S.period[k] = v; persist(); }
+function quickPeriod(w) { S.period = w === 2 ? monthPeriod() : weekPeriod(w); persist(); }
+function csvPay() {
+  const lines = [`Pay summary ${fmtDate(S.period.from)} to ${fmtDate(S.period.to)}`].concat(payRows().filter(r => r.assigned || r.bonus || r.ded).map(r => `${r.name}: ${money(r.net)} (${r.done} rooms${r.bonus ? ', +' + money(r.bonus) : ''}${r.ded ? ', −' + money(r.ded) : ''})`));
+  copyText(lines.join('\n'));
+}
+function slipData(wi) {
+  const w = S.workers[wi], a = S.tasks.filter(t => t.worker === w.name && inPeriod(t.date) && PAID.includes(t.status) && t.rate !== null), g = {};
+  a.forEach(t => { const k = t.hotel + '|' + t.type; (g[k] = g[k] || {hotel: t.hotel, type: t.type, rate: t.rate, n: 0}).n++; });
+  const groups = Object.values(g), roomPay = groups.reduce((s, x) => s + x.n * x.rate, 0);
+  const adjs = S.adjustments.filter(x => x.worker === w.name && inPeriod(x.date)).sort((x, y) => x.date.localeCompare(y.date));
+  const net = roomPay + adjs.reduce((s, x) => s + x.signed, 0);
+  const pend = S.tasks.filter(t => t.worker === w.name && inPeriod(t.date) && !PAID.includes(t.status)).length;
+  const text = [`PAYSLIP – ${w.name}`, `Period: ${fmtDate(S.period.from)} to ${fmtDate(S.period.to)}`, ''].concat(
+    groups.map(x => `${x.hotel} – ${x.type}: ${x.n} × ${money(x.rate)} = ${money(x.n * x.rate)}`), [`Room pay: ${money(roomPay)}`],
+    adjs.map(x => `${x.type}${x.reason ? ' – ' + x.reason : ''}: ${x.type === 'Bonus' ? '+' : '−'}${money(x.amount)}`), ['', `NET PAY: ${money(net)}`]).join('\n');
+  return {w, groups, roomPay, adjs, net, pend, text, count: a.length};
+}
+function sSlip(wi) {
+  const d = slipData(wi);
+  openSheet(`<h3>${esc(d.w.name)}</h3><div class="mut sm">${fmtDate(S.period.from)} – ${fmtDate(S.period.to)}</div>
+  <div>${d.groups.length ? d.groups.map(x => `<div class="stat"><span>${esc(x.hotel)} · ${esc(x.type)}<br><span class="mut sm num">${x.n} × ${money(x.rate)}</span></span><b class="num">${money(x.n * x.rate)}</b></div>`).join('') : '<div class="mut">No completed rooms in this period.</div>'}
+  ${d.adjs.map(x => `<div class="stat"><span>${x.type}${x.reason ? '<br><span class="mut sm">' + esc(x.reason) + '</span>' : ''}</span><b class="num" style="color:var(--${x.type === 'Bonus' ? 'ok' : 'bad'})">${x.type === 'Bonus' ? '+' : '−'}${money(x.amount)}</b></div>`).join('')}
+  <div class="stat"><b>Net pay</b><b class="amt">${money(d.net)}</b></div></div>
+  ${d.pend ? `<div class="mut sm">${d.pend} assigned room(s) are not done yet and are not included.</div>` : ''}
+  <div class="slip" id="slipText">${esc(d.text)}</div>
+  <button class="btn" onclick="copyText(document.getElementById('slipText').textContent)">Copy payslip text</button>
+  <div class="two"><button class="btn sec" onclick="sAdj(${wi})">Add bonus / deduction</button><button class="btn sec" onclick="closeSheet()">Close</button></div>`);
+}
+function sAdj(wi) {
+  const ws = S.workers.map(w => w.name); if (!ws.length) return toast('Add a worker first');
+  const sel = wi !== undefined ? S.workers[wi].name : ws[0];
+  openSheet(`<h3>Bonus or deduction</h3>
+  <div class="field"><label for="j_worker">Worker</label><select id="j_worker">${opts(ws, sel)}</select></div>
+  <div class="field"><span class="lbl">Type</span><div class="seg" id="j_seg"><button class="on" onclick="segPick('j_seg',this)" data-v="Bonus">Bonus</button><button onclick="segPick('j_seg',this)" data-v="Deduction">Deduction</button></div></div>
+  <div class="two"><div class="field"><label for="j_amt">Amount</label><input id="j_amt" type="number" inputmode="decimal" min="0" step="0.01"></div>
+  <div class="field"><label for="j_date">Date</label><input id="j_date" type="date" value="${todayS() > S.period.to ? S.period.to : todayS()}"></div></div>
+  <div class="field"><label for="j_reason">Reason</label><input id="j_reason" placeholder="e.g. Late arrival, extra rooms"></div>
+  <p class="mut sm" style="margin:0">Enter a positive amount. A deduction is subtracted automatically. Only entries dated inside the pay period count.</p>
+  <button class="btn" onclick="doAdj()">Save</button>`);
+}
+function segPick(id, btn) { document.querySelectorAll('#' + id + ' button').forEach(b => b.classList.remove('on')); btn.classList.add('on'); }
+const segVal = id => (document.querySelector('#' + id + ' button.on') || {}).dataset?.v;
+function doAdj() {
+  const amt = parseFloat(val('j_amt')); if (!(amt > 0)) return toast('Enter an amount above 0');
+  S.adjustments.push({date: val('j_date') || todayS(), worker: val('j_worker'), type: segVal('j_seg'), amount: amt, reason: val('j_reason').trim()});
+  closeSheet(); persist(); toast('Saved');
+}
+function delAdj(i) { S.adjustments.splice(i, 1); persist(); }
+function copyText(text) {
+  const done = () => toast('Copied');
+  const fallback = () => { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? done() : toast('Press and hold the text to copy it'); } catch (e) { toast('Press and hold the text to copy it'); } ta.remove(); };
+  try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+}
+
+/* ============================================================ stock */
+function vStock() {
+  const order = {OUT: 0, LOW: 1, OK: 2}, items = S.inventory.map((it, i) => ({it, i})).sort((a, b) => order[a.it.status] - order[b.it.status] || a.it.name.localeCompare(b.it.name));
+  const n = s => S.inventory.filter(i => i.status === s).length;
+  return `<div class="filters"><span class="chip static OUT">${n('OUT')} out</span><span class="chip static LOW">${n('LOW')} low</span><span class="chip static OK">${n('OK')} ok</span></div>
+  ${items.length ? `<div class="list">${items.map(({it, i}) => `<button class="item" onclick="sItem(${i})"><div class="grow"><div class="t">${esc(it.name)}</div>
+    <div class="s num">${it.cur} ${esc(it.unit)} · reorder at ${it.reorder}${it.toOrder ? ` · order ${it.toOrder}` : ''}</div>
+    <div class="bar" style="margin-top:7px"><i style="width:${Math.min(100, pct(Math.max(0, it.cur), it.target || it.reorder * 2 || 1))}%;background:var(--${it.status === 'OK' ? 'ok' : it.status === 'LOW' ? 'warn' : 'bad'})"></i></div></div>${chip(it.status)}</button>`).join('')}</div>` :
+    `<div class="card empty">No items yet.</div>`}
+  <button class="btn" onclick="sNewItem()">+ New item</button>`;
+}
+let MV = {move: 'Out'};
+function sItem(i) {
+  const it = S.inventory[i], hs = S.hotels.map(h => h.name), recent = S.stocklog.map((m, j) => ({m, j})).filter(x => x.m.item === it.name).sort((a, b) => b.m.date.localeCompare(a.m.date) || b.j - a.j).slice(0, 5);
+  MV = {move: 'Out'};
+  openSheet(`<div class="row"><h3 class="grow">${esc(it.name)}</h3>${chip(it.status)}</div><div class="mut sm num">${it.cur} ${esc(it.unit)} in stock · reorder at ${it.reorder} · target ${it.target}</div>
+  <div class="field"><span class="lbl">Record</span><div class="seg" id="m_seg"><button class="on" data-v="Out" onclick="segPick('m_seg',this);mvChange('Out')">Used / issued</button><button data-v="In" onclick="segPick('m_seg',this);mvChange('In')">Received</button></div></div>
+  <div class="two"><div class="field"><label for="m_qty">Quantity</label><input id="m_qty" type="number" inputmode="decimal" min="0" step="any"></div>
+  <div class="field" id="m_hotelf"><label for="m_hotel">Hotel</label><select id="m_hotel">${opts(hs, '', '—')}</select></div></div>
+  <div class="two"><div class="field"><label for="m_date">Date</label><input id="m_date" type="date" value="${todayS()}"></div><div class="field"><label for="m_note">Note</label><input id="m_note"></div></div>
+  <button class="btn" onclick="doMove(${i})">Record</button>
+  ${recent.length ? `<h2>Recent</h2>${recent.map(({m, j}) => `<div class="stat"><span>${fmtShort(m.date)} · ${m.move === 'In' ? 'received' : 'used'}${m.hotel ? ' · ' + esc(m.hotel) : ''}</span><span><b class="num">${m.qty}</b> <button class="chip idle" style="min-height:28px;padding:3px 9px" onclick="sConfirm('Delete this movement?','Delete','delMove(${j},${i})')">✕</button></span></div>`).join('')}` : ''}
+  <h2>Settings</h2>
+  <div class="two"><div class="field"><label for="s_open">Opening stock</label><input id="s_open" type="number" inputmode="decimal" value="${it.opening}"></div><div class="field"><label for="s_unit">Unit</label><input id="s_unit" value="${esc(it.unit)}"></div></div>
+  <div class="two"><div class="field"><label for="s_re">Reorder at</label><input id="s_re" type="number" inputmode="decimal" value="${it.reorder}"></div><div class="field"><label for="s_tg">Target stock</label><input id="s_tg" type="number" inputmode="decimal" value="${it.target}"></div></div>
+  <div class="field"><label for="s_name">Name</label><input id="s_name" value="${esc(it.name)}"></div>
+  <div class="two"><button class="btn sec" onclick="saveItem(${i})">Save settings</button><button class="btn bad" onclick="delItem(${i})">Delete item</button></div>`);
+}
+function mvChange(m) { MV.move = m; $('#m_hotelf').style.display = m === 'Out' ? '' : 'none'; }
+function doMove(i) {
+  const it = S.inventory[i], q = parseFloat(val('m_qty')); if (!(q > 0)) return toast('Enter a quantity above 0');
+  const move = segVal('m_seg');
+  S.stocklog.push({date: val('m_date') || todayS(), item: it.name, move, qty: q, hotel: move === 'Out' ? val('m_hotel') : '', notes: val('m_note').trim()});
+  persist(); sItem(i); toast(move === 'In' ? 'Received' : 'Recorded');
+}
+function delMove(j, i) { S.stocklog.splice(j, 1); persist(); sItem(i); }
+function saveItem(i) {
+  const it = S.inventory[i], name = val('s_name').trim(); if (!name) return toast('Name cannot be empty');
+  if (name !== it.name) {
+    if (S.inventory.some((x, k) => k !== i && x.name.toLowerCase() === name.toLowerCase())) return toast('That name is already used');
+    S.stocklog.forEach(m => { if (m.item === it.name) m.item = name; }); it.name = name;
+  }
+  it.opening = parseFloat(val('s_open')) || 0; it.reorder = parseFloat(val('s_re')) || 0; it.target = parseFloat(val('s_tg')) || 0; it.unit = val('s_unit').trim();
+  closeSheet(); persist(); toast('Saved');
+}
+function delItem(i) {
+  const it = S.inventory[i];
+  if (S.stocklog.some(m => m.item === it.name)) return toast('This item has stock movements, so it cannot be deleted.');
+  S.inventory.splice(i, 1); closeSheet(); persist();
+}
+function sNewItem() {
+  openSheet(`<h3>New item</h3><div class="field"><label for="n_name">Name</label><input id="n_name" placeholder="e.g. Bath towels"></div>
+  <div class="two"><div class="field"><label for="n_cat">Category</label><select id="n_cat">${opts(S.lists.categories, '')}</select></div><div class="field"><label for="n_unit">Unit</label><input id="n_unit" placeholder="pieces"></div></div>
+  <div class="two"><div class="field"><label for="n_open">Opening stock</label><input id="n_open" type="number" inputmode="decimal" value="0"></div><div class="field"><label for="n_re">Reorder at</label><input id="n_re" type="number" inputmode="decimal" value="0"></div></div>
+  <div class="field"><label for="n_tg">Target stock</label><input id="n_tg" type="number" inputmode="decimal" value="0"></div><button class="btn" onclick="doNewItem()">Add item</button>`);
+}
+function doNewItem() {
+  const name = val('n_name').trim(); if (!name) return toast('Enter a name');
+  if (S.inventory.some(i => i.name.toLowerCase() === name.toLowerCase())) return toast('That item already exists');
+  S.inventory.push({name, category: val('n_cat'), unit: val('n_unit').trim(), opening: parseFloat(val('n_open')) || 0, reorder: parseFloat(val('n_re')) || 0, target: parseFloat(val('n_tg')) || 0});
+  closeSheet(); persist();
+}
+
+/* ============================================================ more */
+
+/* ============================================================ invoice */
+let INV = null;
+function invInit() {
+  if (INV) return;
+  const p = monthPeriod();
+  INV = {hotel: S.hotels.length ? S.hotels[0].name : '', from: p.from, to: p.to, detail: true, no: '', noAuto: true};
+}
+function invAutoNo() { return 'INV-' + INV.to.replace(/-/g, '').slice(0, 6) + '-' + (S.hotels.findIndex(h => h.name === INV.hotel) + 1); }
+function invData() {
+  const rows = S.tasks.filter(t => t.hotel === INV.hotel && t.date >= INV.from && t.date <= INV.to && PAID.includes(t.status));
+  const price = type => { const r = S.rates.find(x => x.hotel === INV.hotel && x.type === type); return r ? (r.bill !== null && r.bill !== undefined ? r.bill : r.rate) : null; };
+  const groups = {};
+  rows.forEach(t => { (groups[t.type] = groups[t.type] || []).push(t); });
+  const lines = Object.keys(groups).map(type => { const p = price(type); return {type, n: groups[type].length, price: p, amt: p === null ? 0 : p * groups[type].length}; });
+  const missing = lines.filter(l => l.price === null).map(l => l.type);
+  const detail = rows.slice().sort((a, b) => a.date.localeCompare(b.date) || String(a.room).localeCompare(String(b.room), undefined, {numeric: true}));
+  return {rows, lines, missing, detail, price, total: lines.reduce((a, l) => a + l.amt, 0)};
+}
+function invHTML() {
+  const d = invData(), B = S.meta.biz || {}, h = S.hotels.find(x => x.name === INV.hotel) || {};
+  const no = INV.noAuto ? invAutoNo() : INV.no;
+  return `<div class="inv">
+  <div class="inv-top"><div><div class="inv-biz">${esc(B.name || 'Your business name')}</div><div class="inv-sm">${esc(B.contact || '').replace(/\n/g, '<br>')}</div></div>
+  <div class="inv-title">INVOICE</div></div>
+  <div class="inv-meta"><div><div class="inv-lbl">Bill to</div><b>${esc(INV.hotel)}</b><div class="inv-sm">${esc([h.contact, h.phone, h.notes].filter(Boolean).join(' · '))}</div></div>
+  <div style="text-align:right"><div class="inv-lbl">Invoice no.</div><b>${esc(no)}</b><div class="inv-lbl" style="margin-top:6px">Date issued</div>${fmtDate(todayS())}</div></div>
+  <div class="inv-sm" style="margin:10px 0">Room cleaning services for the period <b>${fmtDate(INV.from)}</b> to <b>${fmtDate(INV.to)}</b></div>
+  <table class="inv-t"><tr><th>Room type</th><th class="r">Rooms</th><th class="r">Price per room</th><th class="r">Amount</th></tr>
+  ${d.lines.map(l => `<tr><td>${esc(l.type)}</td><td class="r">${l.n}</td><td class="r">${l.price === null ? '—' : money(l.price)}</td><td class="r">${money(l.amt)}</td></tr>`).join('') || '<tr><td colspan="4" class="inv-sm">No completed rooms in this period.</td></tr>'}
+  <tr class="tot"><td>Total</td><td class="r">${d.rows.length}</td><td></td><td class="r">${money(d.total)}</td></tr></table>
+  ${INV.detail && d.detail.length ? `<div class="inv-lbl" style="margin:16px 0 4px">Rooms cleaned</div><table class="inv-t sm"><tr><th>Date</th><th>Room</th><th>Type</th><th class="r">Amount</th></tr>
+  ${d.detail.map(t => `<tr><td>${fmtShort(t.date)}</td><td>${esc(t.room)}</td><td>${esc(t.type)}</td><td class="r">${money(d.price(t.type) || 0)}</td></tr>`).join('')}</table>` : ''}
+  ${B.pay ? `<div class="inv-lbl" style="margin:16px 0 4px">Payment details</div><div class="inv-sm">${esc(B.pay).replace(/\n/g, '<br>')}</div>` : ''}
+  <div class="inv-sm" style="margin-top:14px">Thank you for your business.</div></div>`;
+}
+function vInvoice() {
+  invInit();
+  if (!S.hotels.length) return `<div class="card empty">Add a hotel under Setup first.</div>`;
+  const B = S.meta.biz || {}, d = invData();
+  return `<div class="card"><div class="field"><label for="i_hotel">Hotel</label><select id="i_hotel" onchange="INV.hotel=this.value;render()">${opts(S.hotels.map(h => h.name), INV.hotel)}</select></div>
+  <div class="two"><div class="field"><label for="i_from">From</label><input id="i_from" type="date" value="${INV.from}" onchange="INV.from=this.value;render()"></div>
+  <div class="field"><label for="i_to">To</label><input id="i_to" type="date" value="${INV.to}" onchange="INV.to=this.value;render()"></div></div>
+  <div class="filters" style="margin-top:10px"><button class="f" onclick="invQuick(0)">This month</button><button class="f" onclick="invQuick(1)">Last month</button><button class="f" onclick="invQuick(2)">Last 2 weeks</button><button class="f" onclick="invQuick(3)">Last 4 weeks</button></div>
+  <div class="field" style="margin-top:12px"><label for="i_no">Invoice number</label><input id="i_no" value="${esc(INV.noAuto ? invAutoNo() : INV.no)}" onchange="INV.no=this.value;INV.noAuto=false;render()"></div>
+  <label class="chk"><input type="checkbox" ${INV.detail ? 'checked' : ''} onchange="INV.detail=this.checked;render()"> Include a room-by-room list</label></div>
+  <div class="card"><h2 style="margin:0 0 8px">Your details on the invoice</h2>
+  <div class="field"><label for="b_name">Business name</label><input id="b_name" value="${esc(B.name || '')}" onchange="setBiz('name',this.value)"></div>
+  <div class="field"><label for="b_contact">Address, phone, email</label><textarea id="b_contact" rows="3" onchange="setBiz('contact',this.value)">${esc(B.contact || '')}</textarea></div>
+  <div class="field"><label for="b_pay">Payment details (bank, mobile money, terms)</label><textarea id="b_pay" rows="3" onchange="setBiz('pay',this.value)">${esc(B.pay || '')}</textarea></div></div>
+  ${d.missing.length ? `<div class="banner">No price set for: ${esc(d.missing.join(', '))}. Add one under Setup, Pay rates.</div>` : ''}
+  <div class="card invwrap">${invHTML()}</div>
+  <button class="btn" onclick="invPrint()">Print or save as PDF</button>
+  <p class="mut sm">Only rooms marked Done or Inspected are billed. On a phone, choose Save as PDF in the print screen, then share the file with the hotel.</p>`;
+}
+function setBiz(k, v) { S.meta.biz = S.meta.biz || {}; S.meta.biz[k] = v; persist(); }
+function invQuick(k) {
+  const n = new Date(), T = todayS();
+  if (k === 0) { const p = monthPeriod(); INV.from = p.from; INV.to = p.to; }
+  else if (k === 1) { INV.from = ymd(new Date(n.getFullYear(), n.getMonth() - 1, 1)); INV.to = ymd(new Date(n.getFullYear(), n.getMonth(), 0)); }
+  else if (k === 2) { INV.from = addDays(T, -13); INV.to = T; }
+  else { INV.from = addDays(T, -27); INV.to = T; }
+  render();
+}
+function invPrint() {
+  let pa = $('#printarea'); if (!pa) { pa = document.createElement('div'); pa.id = 'printarea'; document.body.appendChild(pa); }
+  pa.innerHTML = invHTML();
+  const old = document.title; document.title = 'Invoice ' + (INV.noAuto ? invAutoNo() : INV.no) + ' ' + INV.hotel;
+  setTimeout(() => { window.print(); document.title = old; }, 50);
+}
+
+function vMore() {
+  if (!sub) sub = 'workers';
+  const tabs = [['workers', 'Workers'], ['hotels', 'Hotels'], ['rates', 'Pay rates'], ['backup', 'Backup & Excel']];
+  const body = {workers: vWorkers, hotels: vHotels, rates: vRates, backup: vBackup}[sub]();
+  return `<div class="ptabs">${tabs.map(([k, l]) => `<button class="${sub === k ? 'on' : ''}" onclick="sub='${k}';render()">${l}</button>`).join('')}</div>${body}`;
+}
+function vWorkers() {
+  return `<div class="list">${S.workers.map((w, i) => `<button class="item" onclick="sWorker(${i})"><div class="grow"><div class="t">${esc(w.name)}</div><div class="s">${esc(w.phone || 'No phone')}</div></div><span class="chip static ${(w.active || 'Yes').toLowerCase() === 'no' ? 'Pending' : 'Done'}">${(w.active || 'Yes').toLowerCase() === 'no' ? 'Inactive' : 'Active'}</span></button>`).join('') || '<div class="card empty">No workers yet.</div>'}</div>
+  <button class="btn" onclick="sWorker(-1)">+ Add worker</button>`;
+}
+function sWorker(i) {
+  const w = i >= 0 ? S.workers[i] : {name: '', phone: '', active: 'Yes', notes: '', start: todayS()};
+  openSheet(`<h3>${i >= 0 ? 'Edit worker' : 'New worker'}</h3><div class="field"><label for="w_name">Name</label><input id="w_name" value="${esc(w.name)}"></div>
+  <div class="two"><div class="field"><label for="w_phone">Phone</label><input id="w_phone" type="tel" value="${esc(w.phone)}"></div><div class="field"><label for="w_active">Status</label><select id="w_active"><option ${(w.active || 'Yes').toLowerCase() !== 'no' ? 'selected' : ''} value="Yes">Active</option><option ${(w.active || '').toLowerCase() === 'no' ? 'selected' : ''} value="No">Inactive</option></select></div></div>
+  <div class="field"><label for="w_notes">Notes / payment details</label><input id="w_notes" value="${esc(w.notes)}"></div>
+  <button class="btn" onclick="saveWorker(${i})">Save</button>${i >= 0 ? `<button class="btn bad" onclick="delWorker(${i})">Delete</button>` : ''}
+  ${i >= 0 ? '<p class="mut sm" style="margin:0">Set to Inactive when someone leaves. Their past work and pay stay on record.</p>' : ''}`);
+}
+function saveWorker(i) {
+  const name = val('w_name').trim(); if (!name) return toast('Enter a name');
+  if (S.workers.some((x, k) => k !== i && x.name.toLowerCase() === name.toLowerCase())) return toast('A worker with that name exists. Add a surname or initial.');
+  const rec = {name, phone: val('w_phone').trim(), active: val('w_active'), notes: val('w_notes').trim(), start: i >= 0 ? S.workers[i].start : todayS()};
+  if (i >= 0) { const old = S.workers[i].name; if (old !== name) { S.tasks.forEach(t => { if (t.worker === old) t.worker = name; }); S.adjustments.forEach(a => { if (a.worker === old) a.worker = name; }); } S.workers[i] = rec; } else S.workers.push(rec);
+  closeSheet(); persist();
+}
+function delWorker(i) {
+  const n = S.workers[i].name;
+  if (S.tasks.some(t => t.worker === n) || S.adjustments.some(a => a.worker === n)) return toast('This worker has history. Set them to Inactive instead.');
+  S.workers.splice(i, 1); closeSheet(); persist();
+}
+function vHotels() {
+  return `<div class="list">${S.hotels.map((h, i) => `<button class="item" onclick="sHotel(${i})"><div class="grow"><div class="t">${esc(h.name)}</div><div class="s">${esc([h.contact, h.phone].filter(Boolean).join(' · ') || 'No contact')}</div></div><span class="mut">›</span></button>`).join('') || '<div class="card empty">No hotels yet.</div>'}</div>
+  <button class="btn" onclick="sHotel(-1)">+ Add hotel</button>`;
+}
+function sHotel(i) {
+  const h = i >= 0 ? S.hotels[i] : {name: '', contact: '', phone: '', notes: ''};
+  openSheet(`<h3>${i >= 0 ? 'Edit hotel' : 'New hotel'}</h3><div class="field"><label for="h_name">Hotel name</label><input id="h_name" value="${esc(h.name)}"></div>
+  <div class="two"><div class="field"><label for="h_contact">Contact</label><input id="h_contact" value="${esc(h.contact)}"></div><div class="field"><label for="h_phone">Phone</label><input id="h_phone" type="tel" value="${esc(h.phone)}"></div></div>
+  <div class="field"><label for="h_notes">Address / notes</label><input id="h_notes" value="${esc(h.notes)}"></div>
+  <button class="btn" onclick="saveHotel(${i})">Save</button>${i >= 0 ? `<button class="btn bad" onclick="delHotel(${i})">Delete</button>` : ''}`);
+}
+function saveHotel(i) {
+  const name = val('h_name').trim(); if (!name) return toast('Enter a hotel name');
+  if (S.hotels.some((x, k) => k !== i && x.name.toLowerCase() === name.toLowerCase())) return toast('That hotel already exists');
+  const rec = {name, contact: val('h_contact').trim(), phone: val('h_phone').trim(), notes: val('h_notes').trim()};
+  if (i >= 0) { const old = S.hotels[i].name; if (old !== name) { S.tasks.forEach(t => { if (t.hotel === old) t.hotel = name; }); S.rates.forEach(r => { if (r.hotel === old) r.hotel = name; }); S.stocklog.forEach(m => { if (m.hotel === old) m.hotel = name; }); } S.hotels[i] = rec; } else S.hotels.push(rec);
+  closeSheet(); persist();
+}
+function delHotel(i) {
+  const n = S.hotels[i].name;
+  if (S.tasks.some(t => t.hotel === n) || S.rates.some(r => r.hotel === n)) return toast('This hotel is used by rooms or rates, so it cannot be deleted.');
+  S.hotels.splice(i, 1); closeSheet(); persist();
+}
+function vRates() {
+  return `<p class="mut sm" style="margin:0">Pay per room for each hotel and room type. Rooms without a rate earn nothing until you add one. Optionally set the price you charge the hotel, used on invoices.</p>
+  <div class="list">${S.rates.map((r, i) => `<button class="item" onclick="sRate(${i})"><div class="grow"><div class="t">${esc(r.hotel)}</div><div class="s">${esc(r.type)}</div></div><div class="amt">${money(r.rate)}${r.bill !== undefined && r.bill !== null ? `<div class="mut sm" style="font-weight:400">Invoice ${money(r.bill)}</div>` : ''}</div></button>`).join('') || '<div class="card empty">No rates yet.</div>'}</div>
+  <button class="btn" onclick="sRate(-1)">+ Add rate</button>`;
+}
+function sRate(i) {
+  if (!S.hotels.length) return toast('Add a hotel first');
+  const r = i >= 0 ? S.rates[i] : {hotel: S.hotels[0].name, type: S.lists.roomTypes[0], rate: '', bill: null};
+  openSheet(`<h3>${i >= 0 ? 'Edit rate' : 'New rate'}</h3><div class="field"><label for="r_hotel">Hotel</label><select id="r_hotel">${opts(S.hotels.map(h => h.name), r.hotel)}</select></div>
+  <div class="two"><div class="field"><label for="r_type">Room type</label><select id="r_type">${opts(S.lists.roomTypes, r.type)}</select></div><div class="field"><label for="r_rate">Pay per room</label><input id="r_rate" type="number" inputmode="decimal" step="0.01" value="${r.rate}"></div></div>
+  <div class="field"><label for="r_bill">Price charged to the hotel per room (for invoices, optional)</label><input id="r_bill" type="number" inputmode="decimal" step="0.01" value="${r.bill === null || r.bill === undefined ? '' : r.bill}" placeholder="Leave blank to use the pay rate"></div>
+  <div class="field"><label for="r_new">Or add a new room type</label><input id="r_new" placeholder="e.g. Penthouse"></div>
+  <button class="btn" onclick="saveRate(${i})">Save</button>${i >= 0 ? `<button class="btn bad" onclick="S.rates.splice(${i},1);closeSheet();persist()">Delete</button>` : ''}`);
+}
+function saveRate(i) {
+  const hotel = val('r_hotel'), nt = val('r_new').trim(), type = nt || val('r_type'), rate = parseFloat(val('r_rate'));
+  if (isNaN(rate) || rate < 0) return toast('Enter the pay per room');
+  if (S.rates.some((x, k) => k !== i && x.hotel === hotel && x.type === type)) return toast('That hotel and room type already has a rate');
+  if (nt && !S.lists.roomTypes.includes(nt)) S.lists.roomTypes.push(nt);
+  const bv = parseFloat(val('r_bill')), bill = isNaN(bv) ? null : bv;
+  if (i >= 0) S.rates[i] = {hotel, type, rate, bill}; else S.rates.push({hotel, type, rate, bill});
+  closeSheet(); persist();
+}
+
+/* ============================================================ backup, export, import */
+function vBackup() {
+  try { prebuild(); } catch (e) {}
+  const d = daysSinceBackup();
+  return `<div class="card"><div class="t" style="font-weight:700">${d === null ? 'Not backed up yet' : d === 0 ? 'Backed up today' : `Last backup ${d} day${d > 1 ? 's' : ''} ago`}</div>
+    <p class="mut sm">Your data lives inside this browser on this phone. Clearing browser data or changing phone would erase it, so export to Excel regularly and keep the file safe (email it to yourself or save it to your cloud drive).</p>
+    ${READY ? `<button class="btn" onclick="sendReady()">File ready: tap to save to cloud</button>` : `<button class="btn" id="cloudBtn" onclick="cloudClick()">Save backup to my cloud</button>`}
+    <p class="mut sm" style="margin:8px 0">Opens your phone's share menu. Choose Google Drive, OneDrive, Dropbox, iCloud Drive or Files, then pick a folder.</p>
+    <button class="btn sec" id="expBtn" onclick="exportXlsx()">Download Excel file</button></div>
+  <div class="card"><div style="font-weight:700">Worker reports</div><p class="mut sm">When a worker sends you a report, tap the link in the message. Or paste the whole message here.</p>
+    <div class="field"><textarea id="rep_txt" rows="3" placeholder="Paste the worker's message here"></textarea></div><button class="btn sec" onclick="pasteReport()">Read report</button></div>
+  <div class="card"><div style="font-weight:700">Restore or move from Excel</div><p class="mut sm">Load a workbook exported from this app, or your Cleaning_Management_System.xlsx from the PC version. This replaces everything on this phone.</p>
+    <label class="filebtn">Choose Excel file<input type="file" accept=".xlsx" onchange="pickImport(this)"></label></div>
+  <div class="card"><div class="field"><label for="cur">Currency symbol (optional)</label><input id="cur" value="${esc(S.currency)}" placeholder="e.g. £  ₵  ₦  $" maxlength="4" onchange="S.currency=this.value.replace(/['&quot;<>&\\\\]/g,'').trim();persist()"></div></div>
+  <div class="card"><div style="font-weight:700">Data</div><div class="list" style="margin-top:10px"><button class="btn sec" onclick="sConfirm('Replace all data with sample data?','Replace','loadSample()')">Load sample data</button>
+    <button class="btn bad" onclick="sConfirm('Erase everything on this phone? Export first if you need it.','Erase','eraseAll()')">Erase everything</button></div></div>`;
+}
+function eraseAll() { S = blank(); S.meta.welcomed = false; try { localStorage.removeItem(KEY); } catch (e) {} derive(); tab = 'home'; sub = ''; render(); }
+function loadJSZip() {
+  return new Promise((res, rej) => {
+    if (window.JSZip) return res(window.JSZip);
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload = () => window.JSZip ? res(window.JSZip) : rej(new Error('lib')); s.onerror = () => rej(new Error('lib')); document.head.appendChild(s);
+  });
+}
+async function saveFile(filename, blob) {
+  let dl = null; try { dl = window.claude && await window.claude.use('downloads'); } catch (e) {}
+  if (dl) { try { await dl.save({filename, data: blob}); return true; } catch (e) { if (e && e.code === 'declined') return false; throw e; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); return true;
+}
+
+/* ---- minimal .xlsx writer (inline strings, a handful of styles) ---- */
+const XS = {def: 0, head: 1, title: 2, sub: 3, date: 4, money: 5, pct: 6, bold: 7, boldMoney: 8};
+const colL = n => { let s = ''; for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + (n - 1) % 26) + s; return s; };
+const xmlEsc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c])).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+const serial = s => Math.round((Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) - Date.UTC(1899, 11, 30)) / 864e5);
+class XSheet {
+  constructor(name, widths) { this.name = name; this.widths = widths || []; this.cells = {}; this.heights = {}; }
+  set(r, c, v, s) { if (v === null || v === undefined || v === '') { if (s) this.cells[r + ',' + c] = {s}; return; } this.cells[r + ',' + c] = {v, s: s || 0}; }
+  xml() {
+    const rows = {};
+    Object.keys(this.cells).forEach(k => { const [r, c] = k.split(',').map(Number); (rows[r] = rows[r] || []).push([c, this.cells[k]]); });
+    const cols = this.widths.length ? `<cols>${this.widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>` : '';
+    const body = Object.keys(rows).map(Number).sort((a, b) => a - b).map(r => {
+      const cs = rows[r].sort((a, b) => a[0] - b[0]).map(([c, o]) => {
+        const ref = colL(c) + r, v = o.v;
+        if (v === undefined) return `<c r="${ref}" s="${o.s}"/>`;
+        if (typeof v === 'number' && isFinite(v)) return `<c r="${ref}" s="${o.s}"><v>${v}</v></c>`;
+        if (typeof v === 'object' && v.d) return `<c r="${ref}" s="${o.s || XS.date}"><v>${serial(v.d)}</v></c>`;
+        return `<c r="${ref}" s="${o.s}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+      }).join('');
+      return `<row r="${r}"${this.heights[r] ? ` ht="${this.heights[r]}" customHeight="1"` : ''}>${cs}</row>`;
+    }).join('');
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews><sheetFormatPr defaultRowHeight="14"/>${cols}<sheetData>${body}</sheetData></worksheet>`;
+  }
+}
+const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="3"><numFmt numFmtId="164" formatCode="dd\\-mmm\\-yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00"/><numFmt numFmtId="166" formatCode="0%"/></numFmts>
+<fonts count="5"><font><sz val="10"/><name val="Arial"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Arial"/></font><font><b/><sz val="16"/><color rgb="FF1F4E5F"/><name val="Arial"/></font><font><i/><sz val="10"/><color rgb="FF666666"/><name val="Arial"/></font><font><b/><sz val="10"/><name val="Arial"/></font></fonts>
+<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1F4E5F"/><bgColor indexed="64"/></patternFill></fill></fills>
+<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="9">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="165" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1" applyNumberFormat="1"/>
+</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+async function buildXlsx(sheets) {
+  const JSZip = await loadJSZip(), z = new JSZip();
+  z.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`);
+  z.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
+  z.file('xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${xmlEsc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`);
+  z.file('xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  z.file('xl/styles.xml', STYLES_XML);
+  sheets.forEach((s, i) => z.file(`xl/worksheets/sheet${i + 1}.xml`, s.xml()));
+  return z.generateAsync({type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', compression: 'DEFLATE'});
+}
+function buildSheets() {
+  const stamp = `Exported from Cleaning Manager (phone) on ${fmtDate(todayS())}. Values are a snapshot, not live formulas.`;
+  const out = [];
+  function sheet(name, title, heads, widths, headRow) {
+    const sh = new XSheet(name, widths); sh.set(1, 1, title, XS.title); sh.set(2, 1, stamp, XS.sub);
+    heads.forEach((h, i) => sh.set(headRow || 4, i + 1, h, XS.head)); sh.heights[headRow || 4] = 30; out.push(sh); return sh;
+  }
+  const D = s => s ? {d: s} : '';
+  // Pay Report
+  let sh = sheet('Pay Report', 'Pay Report', ['Worker', 'Rooms assigned', 'Rooms completed', 'Not yet done', 'Completion %', 'Room pay', 'Bonuses', 'Deductions', 'Net pay'], [26, 15, 17, 14, 15, 14, 14, 14, 14], 7);
+  sh.set(4, 1, 'Period from', XS.bold); sh.set(4, 2, D(S.period.from), XS.date); sh.set(5, 1, 'Period to', XS.bold); sh.set(5, 2, D(S.period.to), XS.date);
+  const pr = payRows().filter(r => r.assigned || r.bonus || r.ded);
+  pr.forEach((r, i) => { const n = 8 + i; sh.set(n, 1, r.name); sh.set(n, 2, r.assigned); sh.set(n, 3, r.done); sh.set(n, 4, r.assigned - r.done); sh.set(n, 5, r.assigned ? r.done / r.assigned : 0, XS.pct);
+    sh.set(n, 6, r.roomPay, XS.money); sh.set(n, 7, r.bonus, XS.money); sh.set(n, 8, r.ded, XS.money); sh.set(n, 9, r.net, XS.money); });
+  const tr = 8 + pr.length, sum = f => pr.reduce((a, r) => a + f(r), 0);
+  sh.set(tr, 1, 'TOTAL', XS.bold); sh.set(tr, 2, sum(r => r.assigned), XS.bold); sh.set(tr, 3, sum(r => r.done), XS.bold); sh.set(tr, 4, sum(r => r.assigned - r.done), XS.bold);
+  [[6, 'roomPay'], [7, 'bonus'], [8, 'ded'], [9, 'net']].forEach(([c, k]) => sh.set(tr, c, sum(r => r[k]), XS.boldMoney));
+  // Tasks
+  sh = sheet('Tasks', 'Task Log', ['Date', 'Hotel', 'Room no.', 'Room type', 'Assigned worker', 'Status', 'Pay rate', 'Pay earned', 'Notes'], [13, 24, 10, 13, 22, 13, 11, 12, 30]);
+  S.tasks.forEach((t, i) => { const n = 5 + i; sh.set(n, 1, D(t.date)); sh.set(n, 2, t.hotel); sh.set(n, 3, /^\d+$/.test(t.room) ? +t.room : t.room); sh.set(n, 4, t.type); sh.set(n, 5, t.worker); sh.set(n, 6, t.status);
+    sh.set(n, 7, t.rate === null ? 'No rate' : t.rate, XS.money); sh.set(n, 8, t.pay, XS.money); sh.set(n, 9, t.notes); });
+  // Adjustments
+  sh = sheet('Adjustments', 'Bonuses & Deductions', ['Date', 'Worker', 'Type', 'Amount', 'Reason', 'Payslip # (auto)'], [13, 24, 12, 12, 38, 16]);
+  S.adjustments.forEach((a, i) => { const n = 5 + i; sh.set(n, 1, D(a.date)); sh.set(n, 2, a.worker); sh.set(n, 3, a.type); sh.set(n, 4, a.amount, XS.money); sh.set(n, 5, a.reason); });
+  // Inventory
+  sh = sheet('Inventory', 'Inventory', ['Item', 'Category', 'Unit', 'Opening stock', 'Received (In)', 'Used (Out)', 'Current stock', 'Reorder level', 'Target stock', 'Status', 'To order', 'Alert #'], [26, 13, 10, 14, 14, 12, 14, 14, 13, 10, 11, 9]);
+  S.inventory.forEach((it, i) => { const n = 5 + i; [it.name, it.category, it.unit, it.opening, it.inQ, it.outQ, it.cur, it.reorder, it.target, it.status, it.toOrder].forEach((v, c) => sh.set(n, c + 1, v)); });
+  // Stock log
+  sh = sheet('Stock Log', 'Stock Log', ['Date', 'Item', 'In / Out', 'Quantity', 'Hotel (for Out)', 'Notes'], [13, 26, 10, 11, 24, 30]);
+  S.stocklog.forEach((m, i) => { const n = 5 + i; sh.set(n, 1, D(m.date)); sh.set(n, 2, m.item); sh.set(n, 3, m.move); sh.set(n, 4, m.qty); sh.set(n, 5, m.hotel); sh.set(n, 6, m.notes); });
+  // Workers
+  sh = sheet('Workers', 'Workers', ['Worker ID', 'Worker name', 'Phone', 'Start date', 'Active? (Yes/No)', 'Payment details / notes'], [11, 24, 18, 14, 16, 36]);
+  S.workers.forEach((w, i) => { const n = 5 + i; sh.set(n, 1, 'W' + String(i + 1).padStart(3, '0')); sh.set(n, 2, w.name); sh.set(n, 3, w.phone); sh.set(n, 4, D(w.start)); sh.set(n, 5, w.active || 'Yes'); sh.set(n, 6, w.notes); });
+  // Hotels
+  sh = sheet('Hotels', 'Hotels', ['Hotel name', 'Contact person', 'Phone', 'Address / notes'], [26, 22, 18, 40]);
+  S.hotels.forEach((h, i) => { const n = 5 + i; sh.set(n, 1, h.name); sh.set(n, 2, h.contact); sh.set(n, 3, h.phone); sh.set(n, 4, h.notes); });
+  // Rates
+  sh = sheet('Rates', 'Pay Rates', ['Lookup key (auto)', 'Hotel', 'Room type', 'Pay per room', 'Invoice price per room'], [34, 26, 16, 14, 20]);
+  S.rates.forEach((r, i) => { const n = 5 + i; sh.set(n, 1, r.hotel + '|' + r.type); sh.set(n, 2, r.hotel); sh.set(n, 3, r.type); sh.set(n, 4, r.rate, XS.money); if (r.bill !== null && r.bill !== undefined) sh.set(n, 5, r.bill, XS.money); });
+  // Lists
+  sh = sheet('Lists', 'Lists', ['Task status', 'Room type', 'Stock movement', 'Item category'], [16, 16, 18, 16]);
+  STATUSES.forEach((s, i) => sh.set(5 + i, 1, s)); S.lists.roomTypes.slice(0, 10).forEach((s, i) => sh.set(5 + i, 2, s));
+  ['In', 'Out'].forEach((s, i) => sh.set(5 + i, 3, s)); S.lists.categories.slice(0, 10).forEach((s, i) => sh.set(5 + i, 4, s));
+  return out;
+}
+let READY = null, PRE = null;
+function prebuild() {
+  const key = (S.meta.changes || 0) + ':' + todayS(); if (PRE && PRE.key === key) return;
+  const p = PRE = {key, blob: null};
+  try { buildXlsx(buildSheets()).then(b => { p.blob = b; }, () => { p.err = true; }); } catch (e) { p.err = true; }
+}
+function cloudClick() {
+  const key = (S.meta.changes || 0) + ':' + todayS();
+  if (PRE && PRE.key === key && PRE.blob) { const name = `Cleaning_Manager_${todayS()}.xlsx`; const pr = shareBlob(PRE.blob, name); pr.then(ok => { if (ok) { markBackup(); if (ok === true) toast('Backup sent'); render(); } }, e => toast('Failed: ' + (e.message || e))); return; }
+  exportXlsx('cloud');
+}
+async function shareBlob(blob, name) {
+  const f = new File([blob], name, {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  if (!(navigator.canShare && navigator.canShare({files: [f]}))) { await saveFile(name, blob); toast('This browser cannot send files to apps. The file was downloaded; upload it from your Files app.'); return 'dl'; }
+  try { await navigator.share({files: [f]}); return true; }
+  catch (e) {
+    if (e && e.name === 'AbortError') return false;
+    if (e && e.name === 'NotAllowedError') { READY = {blob, name}; render(); toast('File is ready. Tap the button again to choose where to save it.'); return false; }
+    await saveFile(name, blob); toast('Could not open the share menu (' + ((e && (e.name || e.message)) || 'error') + '). The file was downloaded instead. Open your Files or Downloads and upload it to your cloud.'); return 'dl';
+  }
+}
+function markBackup() { S.meta.lastBackup = new Date().toISOString(); S.meta.sinceBackup = 0; try { localStorage.setItem(KEY, serialize()); } catch (e) {} }
+async function sendReady() { const r = READY; if (!r) return; const ok = await shareBlob(r.blob, r.name); if (ok) { READY = null; markBackup(); if (ok === true) toast('Backup sent'); render(); } }
+async function exportXlsx(mode) {
+  const btn = $(mode === 'cloud' ? '#cloudBtn' : '#expBtn'); if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+  try {
+    const blob = await buildXlsx(buildSheets());
+    const name = `Cleaning_Manager_${todayS()}.xlsx`;
+    const ok = mode === 'cloud' ? await shareBlob(blob, name) : await saveFile(name, blob);
+    if (ok) { S.meta.lastBackup = new Date().toISOString(); S.meta.sinceBackup = 0; try { localStorage.setItem(KEY, serialize()); } catch (e) {} if (ok !== 'dl') toast('Excel file ready'); }
+  } catch (e) { toast(e && e.message === 'lib' ? 'Could not load the file library. Check your internet connection.' : 'Export failed: ' + (e.message || e)); }
+  render();
+}
+
+/* ---- minimal .xlsx reader ---- */
+const colN = ref => { const m = /^([A-Z]+)/.exec(ref)[1]; let n = 0; for (const ch of m) n = n * 26 + ch.charCodeAt(0) - 64; return n; };
+const rowN = ref => +/(\d+)$/.exec(ref)[1];
+const xparse = t => new DOMParser().parseFromString(t, 'application/xml');
+const kids = (el, name) => Array.from(el.getElementsByTagName(name));
+const BUILTIN_DATE = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47]);
+function isDateFmt(code) { return /[dmyhs]/i.test(String(code).replace(/"[^"]*"|\\.|\[[^\]]*\]|_.|\*./g, '')) && !/^(general|0|#)/i.test(code); }
+function serialToYmd(n) { const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(n) * 864e5); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+async function readXlsx(buf) {
+  const JSZip = await loadJSZip(), z = await JSZip.loadAsync(buf);
+  const txt = async p => { const f = z.file(p.replace(/^\//, '')); return f ? f.async('string') : null; };
+  const wbx = xparse(await txt('xl/workbook.xml')), rels = xparse(await txt('xl/_rels/workbook.xml.rels'));
+  const target = {}; kids(rels, 'Relationship').forEach(r => { let t = r.getAttribute('Target'); target[r.getAttribute('Id')] = t.startsWith('/') ? t.slice(1) : 'xl/' + t; });
+  const sharedT = await txt('xl/sharedStrings.xml'), shared = [];
+  if (sharedT) kids(xparse(sharedT), 'si').forEach(si => shared.push(kids(si, 't').map(t => t.textContent).join('')));
+  const dateXf = []; const stT = await txt('xl/styles.xml');
+  if (stT) {
+    const sx = xparse(stT), fmts = {}; kids(sx, 'numFmt').forEach(n => fmts[n.getAttribute('numFmtId')] = n.getAttribute('formatCode'));
+    const xfs = sx.getElementsByTagName('cellXfs')[0]; if (xfs) Array.from(xfs.children).forEach(xf => { const id = xf.getAttribute('numFmtId'); dateXf.push(BUILTIN_DATE.has(+id) || (fmts[id] !== undefined && isDateFmt(fmts[id]))); });
+  }
+  const sheets = {};
+  for (const sEl of kids(wbx, 'sheet')) {
+    const rid = sEl.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') || sEl.getAttribute('r:id'), p = target[rid];
+    sheets[sEl.getAttribute('name')] = async () => {
+      const x = xparse(await txt(p)), rows = {}; let max = 0;
+      kids(x, 'c').forEach(c => {
+        const ref = c.getAttribute('r'), r = rowN(ref), cn = colN(ref), t = c.getAttribute('t'), s = +(c.getAttribute('s') || 0), vEl = c.getElementsByTagName('v')[0];
+        let v = null;
+        if (t === 'inlineStr') v = kids(c, 't').map(e => e.textContent).join('');
+        else if (vEl) { const raw = vEl.textContent; if (t === 's') v = shared[+raw] ?? ''; else if (t === 'str') v = raw; else if (t === 'b') v = raw === '1'; else if (t === 'e') v = null; else { const num = Number(raw); v = dateXf[s] && isFinite(num) ? {d: serialToYmd(num)} : num; } }
+        if (v === null || v === '') return; (rows[r] = rows[r] || {})[cn] = v; if (r > max) max = r;
+      });
+      return {rows, max};
+    };
+  }
+  return sheets;
+}
+let PENDING = null;
+const sStr = v => v === undefined || v === null || typeof v === 'object' ? '' : String(v).trim();
+const dStr = v => v && typeof v === 'object' ? v.d : (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : '');
+const nNum = v => { const n = Number(typeof v === 'object' ? NaN : v); return isNaN(n) ? 0 : n; };
+function pickImport(input) {
+  const f = input.files && input.files[0]; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const sheets = await readXlsx(fr.result), N = blank(); N.meta.welcomed = true;
+      const each = async (name, fn) => { if (!sheets[name]) return; const {rows, max} = await sheets[name](); for (let r = 5; r <= Math.min(max, 5000); r++) if (rows[r]) fn(rows[r]); };
+      await each('Hotels', r => { const n = sStr(r[1]); if (n) N.hotels.push({name: n, contact: sStr(r[2]), phone: sStr(r[3]), notes: sStr(r[4])}); });
+      await each('Workers', r => { const n = sStr(r[2]); if (n) N.workers.push({name: n, phone: sStr(r[3]), start: dStr(r[4]), active: sStr(r[5]) || 'Yes', notes: sStr(r[6])}); });
+      await each('Rates', r => { const h = sStr(r[2]); if (h) N.rates.push({hotel: h, type: sStr(r[3]), rate: nNum(r[4]), bill: (r[5] === undefined || r[5] === null || r[5] === '') ? null : nNum(r[5])}); });
+      await each('Tasks', r => { const h = sStr(r[2]); if (h) N.tasks.push({date: dStr(r[1]), hotel: h, room: sStr(r[3]), type: sStr(r[4]), worker: sStr(r[5]), status: STATUSES.includes(sStr(r[6])) ? sStr(r[6]) : 'Pending', notes: sStr(r[9])}); });
+      await each('Adjustments', r => { const w = sStr(r[2]); if (w) N.adjustments.push({date: dStr(r[1]), worker: w, type: sStr(r[3]) === 'Deduction' ? 'Deduction' : 'Bonus', amount: nNum(r[4]), reason: sStr(r[5])}); });
+      await each('Inventory', r => { const n = sStr(r[1]); if (n) N.inventory.push({name: n, category: sStr(r[2]), unit: sStr(r[3]), opening: nNum(r[4]), reorder: nNum(r[8]), target: nNum(r[9])}); });
+      await each('Stock Log', r => { const n = sStr(r[2]); if (n) N.stocklog.push({date: dStr(r[1]), item: n, move: sStr(r[3]) === 'In' ? 'In' : 'Out', qty: nNum(r[4]), hotel: sStr(r[5]), notes: sStr(r[6])}); });
+      if (sheets['Pay Report']) { const {rows} = await sheets['Pay Report'](); const a = rows[4] && dStr(rows[4][2]), b = rows[5] && dStr(rows[5][2]); if (a && b) N.period = {from: a, to: b}; }
+      if (sheets['Lists']) { const {rows} = await sheets['Lists'](), t = [], c = []; for (let r = 5; r <= 14; r++) { const x = rows[r] && sStr(rows[r][2]), y = rows[r] && sStr(rows[r][4]); if (x) t.push(x); if (y) c.push(y); } if (t.length) N.lists.roomTypes = t; if (c.length) N.lists.categories = c; }
+      N.rates.concat(N.tasks).forEach(x => { if (x.type && !N.lists.roomTypes.includes(x.type)) N.lists.roomTypes.push(x.type); });
+      if (!N.workers.length && !N.tasks.length && !N.hotels.length && !N.inventory.length) throw new Error('empty');
+      N.currency = S.currency || ''; PENDING = N; input.value = '';
+      openSheet(`<h3>Replace data with this file?</h3><div class="mut">Found ${N.workers.length} workers, ${N.hotels.length} hotels, ${N.rates.length} pay rates, ${N.tasks.length} rooms, ${N.adjustments.length} bonuses/deductions, ${N.inventory.length} stock items and ${N.stocklog.length} stock movements.</div>
+      <p class="mut sm" style="margin:0">Everything currently on this phone will be replaced.</p><div class="two"><button class="btn sec" onclick="PENDING=null;closeSheet()">Cancel</button><button class="btn" onclick="applyImport()">Replace</button></div>`);
+    } catch (e) { input.value = ''; toast(e.message === 'lib' ? 'Could not load the file library. Check your internet connection.' : e.message === 'empty' ? 'No data found. Is this the right workbook?' : 'Could not read that file.'); }
+  };
+  fr.readAsArrayBuffer(f);
+}
+function applyImport() { S = PENDING; PENDING = null; S.meta.lastBackup = new Date().toISOString(); S.meta.sinceBackup = 0; closeSheet(); tab = 'home'; sub = ''; persist(); toast('Data loaded'); }
+
+/* ============================================================ sample data */
+function loadSample() {
+  const N = blank(); N.meta.welcomed = true; N.currency = S ? S.currency : '';
+  N.hotels = [{name: 'Grand Palm Hotel', contact: 'Ms. Adjei', phone: '', notes: 'Sample'}, {name: 'Seaview Inn', contact: 'Mr. Brown', phone: '', notes: 'Sample'}, {name: 'Central Suites', contact: 'Mrs. Osei', phone: '', notes: 'Sample'}];
+  N.workers = ['Ama Mensah', 'Kofi Boateng', 'Esi Owusu', 'Yaw Asante', 'Akua Darko'].map(n => ({name: n, phone: '', start: addDays(todayS(), -60), active: 'Yes', notes: ''}));
+  const R = {'Grand Palm Hotel': [['Standard', 12], ['Deluxe', 16], ['Suite', 25]], 'Seaview Inn': [['Standard', 10], ['Deluxe', 14], ['Family', 18]], 'Central Suites': [['Standard', 13], ['Deluxe', 17], ['Suite', 28]]};
+  Object.keys(R).forEach(h => R[h].forEach(([t, r]) => N.rates.push({hotel: h, type: t, rate: r})));
+  const pat = [['Inspected', 'Inspected', 'Done'], ['Inspected', 'Done', 'Inspected'], ['Done', 'In Progress', 'Pending']];
+  let n = 0;
+  [-2, -1, 0].forEach((off, di) => Object.keys(R).forEach((h, hi) => [0, 1, 2].forEach(k => {
+    N.tasks.push({date: addDays(todayS(), off), hotel: h, room: String(100 * (di + 1) + 10 * hi + k + 1), type: R[h][k][0], worker: N.workers[n++ % 5].name, status: pat[di][(hi + k) % 3], notes: ''});
+  })));
+  N.adjustments = [{date: addDays(todayS(), -1), worker: 'Kofi Boateng', type: 'Bonus', amount: 10, reason: 'Fast turnaround'}, {date: addDays(todayS(), -1), worker: 'Yaw Asante', type: 'Deduction', amount: 5, reason: 'Late arrival'}];
+  N.inventory = [['All-purpose cleaner', 'Cleaning', 'bottles', 40, 15, 40], ['Glass cleaner', 'Cleaning', 'bottles', 20, 8, 20], ['Rubber gloves', 'Cleaning', 'pairs', 50, 20, 60], ['Bed sheets (queen)', 'Bedding', 'sets', 60, 20, 70], ['Pillow cases', 'Bedding', 'pieces', 100, 30, 110], ['Bath towels', 'Bedding', 'pieces', 80, 25, 90], ['Hand soap', 'Toiletries', 'bars', 100, 40, 120]]
+    .map(([name, category, unit, opening, reorder, target]) => ({name, category, unit, opening, reorder, target}));
+  const out = {'All-purpose cleaner': 40, 'Glass cleaner': 18, 'Rubber gloves': 45, 'Bed sheets (queen)': 38, 'Pillow cases': 70, 'Bath towels': 60, 'Hand soap': 55};
+  Object.keys(out).forEach((k, i) => { N.stocklog.push({date: addDays(todayS(), -3), item: k, move: 'Out', qty: Math.ceil(out[k] / 2), hotel: N.hotels[i % 3].name, notes: ''}, {date: addDays(todayS(), -1), item: k, move: 'Out', qty: Math.floor(out[k] / 2), hotel: N.hotels[(i + 1) % 3].name, notes: ''}); });
+  N.period = {from: addDays(todayS(), -2), to: todayS()};
+  S = N; closeSheet(); tab = 'home'; sub = ''; persist(); toast('Sample data loaded');
+}
+
+/* ============================================================ workers: send work, receive reports */
+const b64e = o => { const b = new TextEncoder().encode(JSON.stringify(o)); let t = ''; b.forEach(c => t += String.fromCharCode(c)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const b64d = t => { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const bin = atob(t), b = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return JSON.parse(new TextDecoder().decode(b)); };
+const BASE = () => location.origin + location.pathname;
+const digits = x => String(x || '').replace(/\D/g, '');
+function sendText(text, phone, how) {
+  if (how === 'copy') { copyText(text); return; }
+  if (how === 'share' && navigator.share) { navigator.share({text}).catch(() => {}); return; }
+  const p = phone && String(phone).trim().startsWith('+') ? digits(phone) : '';
+  window.open('https://wa.me/' + p + '?text=' + encodeURIComponent(text), '_blank');
+}
+let SENDTXT = '', SENDPH = '';
+function sSend() {
+  if (!S.workers.length) return toast('Add a worker first');
+  const withRooms = S.workers.map(w => w.name).filter(n => S.tasks.some(t => t.worker === n && t.date === V.date));
+  const sel = V.worker || withRooms[0] || S.workers[0].name;
+  openSheet(`<h3>Send work to a worker</h3><p class="mut sm" style="margin:0">The worker gets a link that opens a simple page with only their rooms and the stock list. They cannot see pay, other workers or your records.</p>
+  <div class="field"><label for="sw_w">Worker</label><select id="sw_w">${opts(S.workers.map(w => w.name), sel)}</select></div>
+  <div class="field"><label for="sw_d">Date</label><input id="sw_d" type="date" value="${V.date}"></div>
+  <div class="field"><label for="sw_p">Your WhatsApp number for reports (optional, with country code)</label><input id="sw_p" type="tel" value="${esc((S.meta.wa || ''))}" placeholder="+233..."></div>
+  <button class="btn" onclick="buildSend('wa')">Send on WhatsApp</button><div class="two"><button class="btn sec" onclick="buildSend('share')">Share…</button><button class="btn sec" onclick="buildSend('copy')">Copy link</button></div>
+  <button class="btn sec" onclick="closeSheet()">Cancel</button>`);
+}
+function buildSend(how) {
+  const name = val('sw_w'), d = val('sw_d') || V.date, wa = digits(val('sw_p'));
+  const rooms = S.tasks.filter(t => t.worker === name && t.date === d).map(t => ({h: t.hotel, r: String(t.room), t: t.type, s: t.status}));
+  if (!rooms.length) return toast('No rooms for ' + name + ' on that date');
+  if (wa !== (S.meta.wa || '')) { S.meta.wa = wa; try { localStorage.setItem(KEY, serialize()); } catch (e) {} }
+  const job = {v: 1, n: name, d, b: (S.meta.biz && S.meta.biz.name) || '', p: wa, rooms, items: S.inventory.map(i => ({n: i.name, u: i.unit}))};
+  const url = BASE() + '#w=' + b64e(job);
+  const w = S.workers.find(x => x.name === name) || {};
+  const text = `Hi ${name}, here are your ${rooms.length} room${rooms.length > 1 ? 's' : ''} for ${fmtDate(d)}. Open this link on your phone to mark rooms done and record stock:\n${url}`;
+  sendText(text, how === 'wa' ? w.phone : '', how === 'wa' ? 'wa' : how);
+  closeSheet();
+}
+/* ---- manager: read a worker's report ---- */
+let PEND = null;
+function parseReport(text) {
+  const m = /[#?&]r=([A-Za-z0-9_-]{8,})/.exec(text) || /CMR:([A-Za-z0-9_-]{8,})/.exec(text);
+  if (!m) return null;
+  try { const o = b64d(m[1]); return o && o.v === 1 && Array.isArray(o.rooms) ? o : null; } catch (e) { return null; }
+}
+function pasteReport() { const o = parseReport(val('rep_txt')); if (!o) return toast('No worker report found in that text'); showReport(o); }
+function showReport(o) {
+  const n = String(o.n || '').slice(0, 80), d = /^\d{4}-\d{2}-\d{2}$/.test(o.d) ? o.d : todayS(), ch = [], un = [];
+  const dup = (S.meta.reports || []).includes(o.id);
+  (o.rooms || []).slice(0, 300).forEach(x => {
+    const t = S.tasks.find(t => t.date === d && t.hotel === x.h && String(t.room) === String(x.r) && t.worker === n);
+    if (!t) { un.push(x); return; }
+    if (!['Pending', 'In Progress', 'Done'].includes(x.s) || t.status === 'Inspected' || t.status === x.s) return;
+    ch.push({t, s: x.s});
+  });
+  const st = []; (o.stock || []).slice(0, 200).forEach(x => {
+    const it = S.inventory.find(i => i.name === x.i), q = Number(x.q);
+    if (it && q > 0 && q < 1e6 && (x.m === 'In' || x.m === 'Out')) st.push({item: it.name, move: x.m, qty: q, unit: it.unit}); else un.push({i: x.i});
+  });
+  PEND = {o: {id: String(o.id || ''), n, d, h: String(o.h || '')}, ch, st};
+  openSheet(`<h3>Report from ${esc(n)}</h3><div class="mut sm">${fmtDate(d)}</div>
+  ${dup ? '<div class="banner">This report was already imported.</div>' : ''}
+  <div class="card"><b>Rooms</b>${ch.length ? ch.map(c => `<div class="stat"><span>${esc(c.t.hotel)} ${esc(c.t.room)}</span><b>${esc(c.t.status)} → ${esc(c.s)}</b></div>`).join('') : '<div class="mut sm">No room changes.</div>'}</div>
+  <div class="card"><b>Stock</b>${st.length ? st.map(x => `<div class="stat"><span>${esc(x.item)}</span><b>${x.move === 'Out' ? 'Used' : 'Received'} ${x.qty} ${esc(x.unit)}</b></div>`).join('') : '<div class="mut sm">No stock entries.</div>'}</div>
+  ${un.length ? `<p class="mut sm">${un.length} line${un.length > 1 ? 's' : ''} did not match your records and were skipped.</p>` : ''}
+  <button class="btn" ${dup ? 'disabled' : ''} onclick="applyReport()">Apply to my records</button><button class="btn sec" onclick="closeSheet()">Cancel</button>`);
+}
+function applyReport() {
+  const P = PEND; if (!P) return;
+  P.ch.forEach(c => { c.t.status = c.s; });
+  const hotels = [...new Set(S.tasks.filter(t => t.worker === P.o.n && t.date === P.o.d).map(t => t.hotel))];
+  P.st.forEach(x => S.stocklog.push({date: P.o.d, item: x.item, move: x.move, qty: x.qty, hotel: x.move === 'Out' && hotels.length === 1 ? hotels[0] : '', notes: 'Reported by ' + P.o.n}));
+  S.meta.reports = (S.meta.reports || []).concat(P.o.id).slice(-100); PEND = null; closeSheet(); persist();
+  toast('Report applied');
+}
+function handleHash() {
+  const h = location.hash;
+  if (h.startsWith('#r=')) { const o = parseReport(h); history.replaceState(null, '', location.pathname); if (o) { if (S && S.meta.welcomed !== false) showReport(o); } }
+}
+/* ---- worker mode (opened from the link a manager sent) ---- */
+const WKEY = 'cleaningManager.worker';
+let W = null;
+function wkBoot() {
+  let job; try { job = b64d(location.hash.slice(3)); } catch (e) { job = null; }
+  let old = null; try { old = JSON.parse(localStorage.getItem(WKEY)); } catch (e) {}
+  if (!job || !Array.isArray(job.rooms)) { $('#app').innerHTML = '<main><div class="card empty">This link is not valid. Ask your manager to send it again.</div></main>'; return; }
+  const src = location.hash;
+  if (old && old.src === src) W = old;
+  else W = {src, job, tab: 'rooms', st: {}, out: old ? old.out || {} : {}, inn: old ? old.inn || {} : {}, last: old ? old.last : null};
+  wkSave(); wkRender();
+}
+function wkSave() { try { localStorage.setItem(WKEY, JSON.stringify(W)); } catch (e) {} }
+const wkKey = r => r.h + '|' + r.r;
+const wkSt = r => W.st[wkKey(r)] || r.s;
+function wkRender() {
+  const J = W.job, y = scrollY, done = J.rooms.filter(r => PAID.includes(wkSt(r))).length;
+  const nav = [['rooms', 'My rooms'], ['stock', 'Stock']];
+  const body = W.tab === 'stock' ? wkStock() : wkRooms();
+  $('#app').innerHTML = `<header><div class="in"><h1>${esc(J.b || 'Cleaning Manager')}</h1><nav>${nav.map(([k, l]) => `<button class="${W.tab === k ? 'on' : ''}" onclick="W.tab='${k}';wkSave();wkRender()">${l}</button>`).join('')}</nav></div></header>
+  <main><div><h2 class="pt">Hello, ${esc(J.n)}</h2><p class="subt">${fmtDate(J.d)} · ${done} of ${J.rooms.length} rooms done</p></div>${body}
+  <div class="sendbar"><button class="btn" onclick="wkSend()">Send report to manager</button><p class="mut sm" style="text-align:center">Sends your rooms and stock to your manager as a message.</p></div>
+  ${W.last ? `<div class="card"><div class="mut sm">Last report sent</div><div class="pre">${esc(W.last)}</div><button class="btn sec" onclick="copyText(W.last)">Copy it</button></div>` : ''}</main>`;
+  scrollTo(0, y);
+}
+function wkRooms() {
+  return `<div class="list">${W.job.rooms.map((r, i) => { const s = wkSt(r), locked = r.s === 'Inspected';
+    return `<div class="card"><div class="row"><div class="grow"><div class="t" style="font-weight:700;font-size:18px">Room ${esc(r.r)}</div><div class="mut sm">${esc(r.h)} · ${esc(r.t)}</div></div></div>
+    ${locked ? '<div class="chip Inspected static" style="margin-top:8px">Inspected</div>' : `<div class="wk-st">${['Pending', 'In Progress', 'Done'].map(x => `<button class="${s === x ? 'on' : ''} ${x === 'Done' ? 'd' : ''}" onclick="wkSet(${i},'${x}')">${x}</button>`).join('')}</div>`}</div>`; }).join('')}</div>`;
+}
+function wkStock() {
+  const it = W.job.items || [];
+  if (!it.length) return '<div class="card empty">No stock items were sent. Ask your manager to add them.</div>';
+  return `<p class="mut sm" style="margin:0">Enter what you used or received today. Counts are cleared after you send the report.</p><div class="list">${it.map((x, i) => `<div class="card"><div class="t" style="font-weight:700">${esc(x.n)} <span class="mut sm">(${esc(x.u)})</span></div>
+  ${[['out', 'Used'], ['inn', 'Received']].map(([k, l]) => `<div class="row" style="margin-top:8px"><div class="grow">${l}</div><div class="step"><button onclick="wkQ('${k}',${i},-1)" aria-label="Less">−</button><input type="number" inputmode="decimal" min="0" value="${W[k][x.n] || 0}" onchange="wkQ('${k}',${i},null,this.value)"><button onclick="wkQ('${k}',${i},1)" aria-label="More">+</button></div></div>`).join('')}</div>`).join('')}</div>`;
+}
+function wkSet(i, s) { W.st[wkKey(W.job.rooms[i])] = s; wkSave(); wkRender(); }
+function wkQ(k, i, delta, v) {
+  const n = W.job.items[i].n; let q = delta === null ? parseFloat(v) : (W[k][n] || 0) + delta;
+  if (isNaN(q) || q < 0) q = 0; if (q) W[k][n] = q; else delete W[k][n]; wkSave(); wkRender();
+}
+function wkSend() {
+  const J = W.job, stock = [];
+  (J.items || []).forEach(x => { if (W.out[x.n]) stock.push({i: x.n, m: 'Out', q: W.out[x.n]}); if (W.inn[x.n]) stock.push({i: x.n, m: 'In', q: W.inn[x.n]}); });
+  const hs = [...new Set(J.rooms.map(r => r.h))];
+  const rep = {v: 1, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), n: J.n, d: J.d, h: hs.length === 1 ? hs[0] : '', rooms: J.rooms.map(r => ({h: r.h, r: r.r, s: wkSt(r)})), stock};
+  const lines = [`Cleaning report – ${J.n} – ${fmtDate(J.d)}`, '', 'Rooms:'].concat(J.rooms.map(r => `${r.h} ${r.r}: ${wkSt(r)}`));
+  if (stock.length) lines.push('', 'Stock:', ...stock.map(x => `${x.i}: ${x.m === 'Out' ? 'used' : 'received'} ${x.q}`));
+  lines.push('', 'Open this link in the manager app to import:', BASE() + '#r=' + b64e(rep));
+  const text = lines.join('\n');
+  W.last = text; W.out = {}; W.inn = {}; wkSave(); wkRender();
+  const p = J.p ? digits(J.p) : '';
+  if (p) window.open('https://wa.me/' + p + '?text=' + encodeURIComponent(text), '_blank');
+  else if (navigator.share) navigator.share({text}).catch(() => {});
+  else { copyText(text); toast('Report copied. Paste it into WhatsApp or a text.'); }
+}
+
+/* ============================================================ boot */
+(function boot() {
+  if (location.hash.startsWith('#w=')) { wkBoot(); window.addEventListener('hashchange', () => location.reload()); return; }
+  const had = loadData();
+  if (!had) { S = blank(); try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); } catch (e) { storageOK = false; } }
+  else { const b = blank(); S.lists = S.lists || b.lists; S.meta = S.meta || b.meta; S.period = S.period || b.period; ['hotels', 'workers', 'rates', 'tasks', 'adjustments', 'inventory', 'stocklog'].forEach(k => S[k] = S[k] || []); }
+  derive(); render(); handleHash(); window.addEventListener('hashchange', () => { if (location.hash.startsWith('#w=')) location.reload(); else handleHash(); });
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+})();
+</script>
+</body>
+</html>
